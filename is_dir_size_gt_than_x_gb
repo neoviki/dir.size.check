@@ -1,0 +1,109 @@
+#!/bin/bash
+# Version 1.0
+# Check if dir size is greater than X GB ( Useful for System Admins )
+#
+#		Author	: Viki (a) Vignesh Natarajan 
+#		Contact	: vikiworks.io
+#		Licence : MIT
+
+
+ARG0=$0
+ARG1=$1
+ARG2=$2
+DEBUG=0
+
+function get_current_dir()
+{
+    CURRENT_DIR=`pwd -P`
+}
+
+
+function usage()
+{
+   echo "usage: $0 <path> <size in GB>"
+}
+
+function check_args()
+{
+
+    if [ -z "$ARG1" ]; then
+        usage
+        exit 1
+    fi
+
+    if [ -z "$ARG2" ]; then
+        usage
+        exit 1
+    fi
+
+    INPUT_DIR="$ARG1"
+
+    NUM='^[0-9]+$'
+
+    if ! [[ $ARG2 =~ $NUM ]]; then
+        if [ $DEBUG -eq 1 ]; then
+            echo "  error: invalid input size"
+            usage
+        else
+            echo "ERROR1"
+        fi
+        exit 1	
+    fi
+    
+    VERIFICATION_SIZE="$ARG2"
+
+}
+
+function get_dir_size()
+{
+    get_current_dir
+    #echo "Input Dir = $INPUT_DIR"
+    cd "$INPUT_DIR" 2> /dev/null 1> /dev/null    
+    if [ $? -ne 0 ]; then
+        if [ $DEBUG -eq 1 ]; then
+            echo "  error: invalid directory ( $INPUT_DIR )"
+        else
+            echo "ERROR2"
+        fi
+        exit 1
+    fi
+
+    DIR_SIZE_KB=`du -s . | awk '{print $1}'`
+    if [ $? -ne 0 ]; then
+        if [ $DEBUG -eq 1 ]; then
+            echo "  error: unable to get dir size"
+        else
+            echo "ERROR3"
+        fi
+        exit 1
+    fi
+
+    #echo "Directory Size : $DIR_SIZE_KB"
+
+    cd $CURRENT_DIR
+}
+
+function verify_dir_size()
+{
+    VERIFICATION_SIZE_IN_KB=`echo $((VERIFICATION_SIZE * 1024 * 1024))` 2> /dev/null
+    if [ $? -ne 0 ]; then
+        if [ $DEBUG -eq 1 ]; then
+            echo "  error: unable to convert VERIFICATION_SIZE in KB"
+        else
+            echo "ERROR4"
+        fi
+        exit 1
+    fi
+    #echo $VERIFICATION_SIZE_IN_KB
+
+
+    if [ $DIR_SIZE_KB -gt $VERIFICATION_SIZE_IN_KB  ]; then
+        echo "TRUE"
+    else
+        echo "FALSE"
+    fi
+}
+
+check_args
+get_dir_size
+verify_dir_size
